@@ -1,15 +1,22 @@
 package org.example.chessgame.model;
 
 import org.example.chessgame.converter.StringArrayConverter;
+import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.*;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Entity
 public class Game {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @ManyToOne
     private Player host;
@@ -22,11 +29,11 @@ public class Game {
     private String[][] board;
 
     // Getters and setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

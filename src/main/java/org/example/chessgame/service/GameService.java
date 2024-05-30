@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 public class GameService {
@@ -19,49 +19,68 @@ public class GameService {
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 
     private final GameRepository gameRepository;
-    private final PlayerRepository playerRepository;
+    //private final PlayerRepository playerRepository;
+    private final PlayerService playerService ;
 
     @Autowired
-    public GameService(GameRepository gameRepository, PlayerRepository playerRepository) {
+    public GameService(GameRepository gameRepository, PlayerService playerService) {
         this.gameRepository = gameRepository;
-        this.playerRepository = playerRepository;
+        //this.playerRepository = playerRepository;
+        this.playerService = playerService;
     }
 
     public Game createGame(Player host) {
-        Player savedHost = playerRepository.save(host);
+        // Ensure the player is created or fetched
+        Player savedHost = playerService.createOrFetchPlayer(host);
 
+        // Create a new game with the host player
         Game game = new Game();
         game.setHost(savedHost);
-        //game.setOpponent(null); // Initially no opponent
-        //game.setBoard(new String[8][8]); // Initialize board
         game.setBoard(initializeBoard());
+
+        // Log the initial board state
+        logger.info("Initial board state: " + Arrays.deepToString(game.getBoard()));
+
         Game savedGame = gameRepository.save(game);
-        logger.debug("Created game with ID: " + savedGame.getId());
+        logger.debug("Created game with ID: {}", savedGame.getId());
         return savedGame;
     }
 
-    public Game makeMove(Long gameId, Move move) {
+
+    public Game makeMove(UUID gameId, Move move) {
+        // Retrieve the game from the repository
         Game game = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
 
-        // Ensure it's the correct player's turn
-        // If white's turn, check the piece at 'from' is a white piece
-        // If black's turn, check the piece at 'from' is a black piece
-        // Toggle turn after move
-
+        // Get the current board state
         String[][] board = game.getBoard();
         String from = move.getFrom();
         String to = move.getTo();
 
-        int fromX = from.charAt(0) - 'a';
-        int fromY = 8 - Character.getNumericValue(from.charAt(1));
+        // Translate chess notation to array indices
+        int[] fromPosition = translateChessNotation(from);
+        int[] toPosition = translateChessNotation(to);
 
-        int toX = to.charAt(0) - 'a';
-        int toY = 8 - Character.getNumericValue(to.charAt(1));
+        // Log the board state before the move for debugging
+        logger.info("Board before move: " + Arrays.deepToString(board));
+        logger.info("Moving piece from " + from + " (row: " + fromPosition[0] + ", col: " + fromPosition[1] + ") to " + to + " (row: " + toPosition[0] + ", col: " + toPosition[1] + ")");
 
-        // Move the piece from source to destination
-        board[toY][toX] = board[fromY][fromX];
-        // Clear the source square
-        board[fromY][fromX] = null;
+        // Ensure that the piece from the 'from' position is moved to the 'to' position
+        String piece = board[fromPosition[0]][fromPosition[1]];
+        logger.info("Piece to move: " + piece);
+
+        // Verify the piece is not null
+        if (piece == null) {
+            logger.error("No piece found at the source position!");
+            throw new RuntimeException("No piece found at the source position!");
+        }
+
+        // Move the piece
+        board[toPosition[0]][toPosition[1]] = piece;
+        // Clear the source position
+        board[fromPosition[0]][fromPosition[1]] = null;
+
+        // Log the board state after the move for debugging
+        logger.info("Board after move: " + Arrays.deepToString(board));
 
         // Save the updated game state
         game.setBoard(board);
@@ -70,15 +89,14 @@ public class GameService {
         return game;
     }
 
-    public Game getGame(Long gameId) {
+
+
+    public Game getGame(UUID gameId) {
         return gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
     }
 
-
     private int[] translateChessNotation(String notation) {
-        // Map files to columns (a-h -> 0-7)
         int col = notation.charAt(0) - 'a';
-        // Map ranks to rows (1-8 -> 7-0)
         int row = 8 - Character.getNumericValue(notation.charAt(1));
         return new int[]{row, col};
     }

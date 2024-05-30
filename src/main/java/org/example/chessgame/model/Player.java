@@ -1,26 +1,31 @@
 package org.example.chessgame.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
+
+import jakarta.persistence.*;
+import java.util.UUID;
 
 @Entity
-@Table(name = "player")
+@Table(name = "player", uniqueConstraints = @UniqueConstraint(columnNames = "name"))
 public class Player {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Column(updatable = false, nullable = false)
+    private UUID id;
+
     private String name;
 
     // Getters and setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

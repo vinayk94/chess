@@ -11,16 +11,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/game")
 public class GameController {
-
 
     private static final Logger logger = LoggerFactory.getLogger(GameController.class);
     private final GameService gameService;
 
     @Autowired
-    public GameController(GameService gameService){
+    public GameController(GameService gameService) {
         this.gameService = gameService;
     }
 
@@ -36,17 +37,27 @@ public class GameController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
     @PostMapping("/move")
-    public ResponseEntity<Game> makeMove(@RequestParam Long gameId, @RequestBody Move move) {
-        logger.info("Received move request for game ID: {}, from: {}, to: {}", gameId, move.getFrom(), move.getTo());
-        Game updatedGame = gameService.makeMove(gameId, move);
-        return ResponseEntity.ok(updatedGame);
+    public ResponseEntity<?> makeMove(@RequestParam UUID gameId, @RequestBody Move move) {
+        try {
+            logger.info("Received move request for game ID: {}, from: {}, to: {}", gameId, move.getFrom(), move.getTo());
+            Game updatedGame = gameService.makeMove(gameId, move);
+            return ResponseEntity.ok(updatedGame);
+        } catch (Exception e) {
+            logger.error("Error making move", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-
-
     @GetMapping("/{gameId}")
-    public Game getGame(@PathVariable Long gameId) {
-        return gameService.getGame(gameId);
+    public ResponseEntity<?> getGame(@PathVariable UUID gameId) {
+        try {
+            Game game = gameService.getGame(gameId);
+            return ResponseEntity.ok(game);
+        } catch (Exception e) {
+            logger.error("Error fetching game", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }
