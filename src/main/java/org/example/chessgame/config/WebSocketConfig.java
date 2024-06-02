@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chess-websocket")
-                .setAllowedOrigins("http://localhost:3000")  // Add allowed origins here
+                .setAllowedOrigins("http://127.0.0.1:8081")  // Update the allowed origin to match your frontend URL
                 .withSockJS();
     }
 
@@ -32,7 +32,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins("http://127.0.0.1:8081")  // Update the allowed origin to match your frontend URL
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

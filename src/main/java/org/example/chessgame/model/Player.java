@@ -1,6 +1,6 @@
 package org.example.chessgame.model;
 
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.*;
 import java.util.UUID;
@@ -11,14 +11,14 @@ public class Player {
 
     @Id
     @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
+    @UuidGenerator
     @Column(updatable = false, nullable = false)
     private UUID id;
 
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    private Color color;
 
     // Getters and setters
     public UUID getId() {
@@ -35,5 +35,13 @@ public class Player {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

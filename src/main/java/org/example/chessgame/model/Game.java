@@ -1,32 +1,31 @@
 package org.example.chessgame.model;
 
-import org.example.chessgame.converter.StringArrayConverter;
-import org.hibernate.annotations.GenericGenerator;
-
+import org.example.chessgame.converter.ChessBoardConverter;
+import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.*;
-import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "Game.findByHost_Name", query = "SELECT g FROM Game g WHERE g.host.name = :hostName")
+})
 public class Game {
+
     @Id
     @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
+    @UuidGenerator
     @Column(updatable = false, nullable = false)
     private UUID id;
 
     @ManyToOne
     private Player host;
 
+    @Convert(converter = ChessBoardConverter.class)
+    @Column(name = "board", columnDefinition = "LONGBLOB")
+    private ChessBoard board;
+
     @ManyToOne
     private Player opponent;
-
-    @Convert(converter = StringArrayConverter.class)
-    @Column(length = 2048) // Increase the length to handle larger data
-    private String[][] board;
 
     // Getters and setters
     public UUID getId() {
@@ -53,21 +52,11 @@ public class Game {
         this.opponent = opponent;
     }
 
-    public String[][] getBoard() {
+    public ChessBoard getBoard() {
         return board;
     }
 
-    public void setBoard(String[][] board) {
+    public void setBoard(ChessBoard board) {
         this.board = board;
-    }
-
-    @Override
-    public String toString() {
-        return "Game{" +
-                "id=" + id +
-                ", host=" + host +
-                ", opponent=" + opponent +
-                ", board=" + Arrays.deepToString(board) +
-                '}';
     }
 }
